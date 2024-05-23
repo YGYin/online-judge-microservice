@@ -23,13 +23,29 @@ import javax.servlet.http.HttpServletRequest;
 @FeignClient(name = "oj-problem-service", path = "/api/problem/inner")
 public interface ProblemServiceFeignClient {
 
+    /**
+     * 通过 id 获取 problem
+     * @param problemId
+     * @return
+     */
     @GetMapping("/get/id")
     Problem getProblemById(@RequestParam("problemId") long problemId);
 
     // todo: Maybe problem Id
+
+    /**
+     * 根据 problem 提交 id 获取提交的 problem
+     * @param problemSubmitId
+     * @return
+     */
     @GetMapping("/problem_submit/get/id")
     ProblemSubmit getProblemSubmitById(@RequestParam("problemSubmitId") long problemSubmitId);
 
+    /**
+     * 更新提交题目
+     * @param problemSubmit
+     * @return
+     */
     @PostMapping("/problem_submit/update")
     Boolean updateProblemSubmitById(@RequestBody ProblemSubmit problemSubmit);
 
