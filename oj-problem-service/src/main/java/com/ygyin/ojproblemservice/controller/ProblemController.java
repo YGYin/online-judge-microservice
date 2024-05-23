@@ -20,7 +20,7 @@ import com.ygyin.ojmodel.model.vo.ProblemSubmitVO;
 import com.ygyin.ojmodel.model.vo.ProblemVO;
 import com.ygyin.ojproblemservice.service.ProblemService;
 import com.ygyin.ojproblemservice.service.ProblemSubmitService;
-import com.ygyin.ojservicecli.service.UserService;
+import com.ygyin.ojservicecli.service.UserServiceFeignClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +33,7 @@ import java.util.List;
  * 题目接口
  */
 @RestController
-@RequestMapping("/problem")
+@RequestMapping("/")
 @Slf4j
 public class ProblemController {
 
@@ -41,7 +41,7 @@ public class ProblemController {
     private ProblemService problemService;
 
     @Resource
-    private UserService userService;
+    private UserServiceFeignClient userServiceFeignClient;
 
     @Resource
     private ProblemSubmitService problemSubmitService;
@@ -77,7 +77,7 @@ public class ProblemController {
             problem.setTestConfig(JSONUtil.toJsonStr(testConfig));
 
         problemService.validProblem(problem, true);
-        User loginUser = userService.getLoginUser(request);
+        User loginUser = userServiceFeignClient.getLoginUser(request);
         problem.setUserId(loginUser.getId());
         problem.setFavorNum(0);
         boolean result = problemService.save(problem);
@@ -98,13 +98,13 @@ public class ProblemController {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User user = userService.getLoginUser(request);
+        User user = userServiceFeignClient.getLoginUser(request);
         long id = deleteRequest.getId();
         // 判断是否存在
         Problem oldProblem = problemService.getById(id);
         ThrowUtils.throwIf(oldProblem == null, ErrorCode.NOT_FOUND_ERROR);
         // 仅本人或管理员可删除
-        if (!oldProblem.getUserId().equals(user.getId()) && !userService.isAdmin(request)) {
+        if (!oldProblem.getUserId().equals(user.getId()) && !userServiceFeignClient.isAdmin(user)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
         boolean b = problemService.removeById(id);
@@ -164,9 +164,9 @@ public class ProblemController {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
 
         // 权限校验，先获取当前登录用户信息
-        User loginUser = userService.getLoginUser(request);
+        User loginUser = userServiceFeignClient.getLoginUser(request);
         // 如果查看题目的不是本人且不是管理人，抛出权限异常，不允许其获取全部信息
-        if (!problem.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser))
+        if (!problem.getUserId().equals(loginUser.getId()) && !userServiceFeignClient.isAdmin(loginUser))
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         return ResultUtils.success(problem);
     }
@@ -237,7 +237,7 @@ public class ProblemController {
         if (problemQueryRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        User loginUser = userService.getLoginUser(request);
+        User loginUser = userServiceFeignClient.getLoginUser(request);
         problemQueryRequest.setUserId(loginUser.getId());
         long current = problemQueryRequest.getCurrent();
         long size = problemQueryRequest.getPageSize();
@@ -279,13 +279,13 @@ public class ProblemController {
 
         // 参数校验
         problemService.validProblem(problem, false);
-        User loginUser = userService.getLoginUser(request);
+        User loginUser = userServiceFeignClient.getLoginUser(request);
         long id = problemEditRequest.getId();
         // 判断是否存在
         Problem oldProblem = problemService.getById(id);
         ThrowUtils.throwIf(oldProblem == null, ErrorCode.NOT_FOUND_ERROR);
         // 仅本人或管理员可编辑
-        if (!oldProblem.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+        if (!oldProblem.getUserId().equals(loginUser.getId()) && !userServiceFeignClient.isAdmin(loginUser)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
         boolean result = problemService.updateById(problem);
@@ -307,7 +307,7 @@ public class ProblemController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
 
         // 登录才能点赞
-        final User loginUser = userService.getLoginUser(request);
+        final User loginUser = userServiceFeignClient.getLoginUser(request);
         long problemSubmitId = problemSubmitService.doProblemSubmit(problemSubmitAddRequest, loginUser);
         return ResultUtils.success(problemSubmitId);
     }
@@ -327,7 +327,7 @@ public class ProblemController {
         Page<ProblemSubmit> problemSubmitPage = problemSubmitService.page(new Page<>(current, size),
                 problemSubmitService.getQueryWrapper(problemSubmitQueryRequest));
         // 提前用 request 获取当前 loginUser 供后面使用
-        final User loginUser = userService.getLoginUser(request);
+        final User loginUser = userServiceFeignClient.getLoginUser(request);
         // 进行脱敏，通过 request 获取当前登录用户判断对应权限，再返回脱敏后的 VO Page，
         return ResultUtils.success(problemSubmitService.getProblemSubmitVOPage(problemSubmitPage, loginUser));
     }

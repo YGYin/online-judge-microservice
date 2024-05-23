@@ -16,7 +16,7 @@ import com.ygyin.ojmodel.model.vo.ProblemVO;
 import com.ygyin.ojmodel.model.vo.UserVO;
 import com.ygyin.ojproblemservice.mapper.ProblemMapper;
 import com.ygyin.ojproblemservice.service.ProblemService;
-import com.ygyin.ojservicecli.service.UserService;
+import com.ygyin.ojservicecli.service.UserServiceFeignClient;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         implements ProblemService {
     @Resource
-    private UserService userService;
+    private UserServiceFeignClient userServiceFeignClient;
 
     /**
      * 用于校验题目是否合法
@@ -138,15 +138,15 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         Long userId = problem.getUserId();
         User user = null;
         if (userId != null && userId > 0)
-            user = userService.getById(userId);
+            user = userServiceFeignClient.getById(userId);
 
         // 得到创建该题目的用户的脱敏信息，再填充到返回给前端的用户封装类里
-        UserVO userVO = userService.getUserVO(user);
+        UserVO userVO = userServiceFeignClient.getUserVO(user);
         problemVO.setUserVO(userVO);
 
         /*
         2. 已登录，获取用户点赞、收藏状态
-        User loginUser = userService.getLoginUserPermitNull(request);
+        User loginUser = userServiceFeignClient.getLoginUserPermitNull(request);
         if (loginUser != null) {
             // 获取点赞
             QueryWrapper<ProblemThumb> problemThumbQueryWrapper = new QueryWrapper<>();
@@ -180,15 +180,15 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
         }
         // 1. 关联查询用户信息
         Set<Long> userIdSet = problemList.stream().map(Problem::getUserId).collect(Collectors.toSet());
-        Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream()
+        Map<Long, List<User>> userIdUserListMap = userServiceFeignClient.listByIds(userIdSet).stream()
                 .collect(Collectors.groupingBy(User::getId));
         // 2. 已登录，获取用户点赞、收藏状态
 //        Map<Long, Boolean> problemIdHasThumbMap = new HashMap<>();
 //        Map<Long, Boolean> problemIdHasFavourMap = new HashMap<>();
-//        User loginUser = userService.getLoginUserPermitNull(request);
+//        User loginUser = userServiceFeignClient.getLoginUserPermitNull(request);
 //        if (loginUser != null) {
 //            Set<Long> problemIdSet = problemList.stream().map(Problem::getId).collect(Collectors.toSet());
-//            loginUser = userService.getLoginUser(request);
+//            loginUser = userServiceFeignClient.getLoginUser(request);
 //            // 获取点赞
 //            QueryWrapper<ProblemThumb> problemThumbQueryWrapper = new QueryWrapper<>();
 //            problemThumbQueryWrapper.in("problemId", problemIdSet);
@@ -210,7 +210,7 @@ public class ProblemServiceImpl extends ServiceImpl<ProblemMapper, Problem>
             if (userIdUserListMap.containsKey(userId))
                 user = userIdUserListMap.get(userId).get(0);
 
-            problemVO.setUserVO(userService.getUserVO(user));
+            problemVO.setUserVO(userServiceFeignClient.getUserVO(user));
             return problemVO;
         }).collect(Collectors.toList());
         problemVOPage.setRecords(problemVOList);
