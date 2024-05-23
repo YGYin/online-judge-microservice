@@ -19,8 +19,8 @@ import com.ygyin.ojmodel.model.vo.ProblemSubmitVO;
 import com.ygyin.ojproblemservice.mapper.ProblemSubmitMapper;
 import com.ygyin.ojproblemservice.service.ProblemService;
 import com.ygyin.ojproblemservice.service.ProblemSubmitService;
-import com.ygyin.ojservicecli.service.JudgeService;
-import com.ygyin.ojservicecli.service.UserService;
+import com.ygyin.ojservicecli.service.JudgeServiceFeignClient;
+import com.ygyin.ojservicecli.service.UserServiceFeignClient;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Lazy;
@@ -44,11 +44,11 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
     private ProblemService problemService;
 
     @Resource
-    private UserService userService;
+    private UserServiceFeignClient userServiceFeignClient;
 
     @Resource
     @Lazy
-    private JudgeService judgeService;
+    private JudgeServiceFeignClient judgeServiceFeignClient;
 
     /**
      * 提交题目
@@ -92,7 +92,7 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
         // 获取提交题目 id，异步执行判题服务
         Long problemSubmitId = problemSubmit.getId();
         CompletableFuture.runAsync(() -> {
-            judgeService.doJudgeProblem(problemSubmitId);
+            judgeServiceFeignClient.doJudgeProblem(problemSubmitId);
         });
 
         return problemSubmitId;
@@ -153,7 +153,7 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
         // 获取当前登录用户的用户 id
         long userId = loginUser.getId();
         // 如果题目不是本人提交的且不是管理员账户，对返回给前端的 VO 中的代码信息进行脱敏
-        if (userId != problemSubmit.getUserId() && !userService.isAdmin(loginUser))
+        if (userId != problemSubmit.getUserId() && !userServiceFeignClient.isAdmin(loginUser))
             problemSubmitVO.setCode(null);
 
         return problemSubmitVO;
