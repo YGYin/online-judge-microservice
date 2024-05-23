@@ -14,8 +14,7 @@ import com.ygyin.ojmodel.model.enums.ProblemSubmitStatusEnum;
 import com.ygyin.ojmodel.model.sandbox.RunCodeRequest;
 import com.ygyin.ojmodel.model.sandbox.RunCodeResponse;
 import com.ygyin.ojmodel.model.sandbox.TestInfo;
-import com.ygyin.ojservicecli.service.ProblemService;
-import com.ygyin.ojservicecli.service.ProblemSubmitService;
+import com.ygyin.ojservicecli.service.ProblemServiceFeignClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -27,16 +26,10 @@ import java.util.stream.Collectors;
 public class JudgeServiceImpl implements JudgeService {
 
     /**
-     * 题目服务，用于查询题目信息
+     * 题目服务，用于查询题目信息和查询题目提交信息
      */
     @Resource
-    private ProblemService problemService;
-
-    /**
-     * 题目提交服务，用于查询题目提交信息
-     */
-    @Resource
-    private ProblemSubmitService problemSubmitService;
+    private ProblemServiceFeignClient problemServiceFeignClient;
 
     @Resource
     private JudgeStrategyManager judgeStrategyManager;
@@ -52,13 +45,13 @@ public class JudgeServiceImpl implements JudgeService {
         // 判题服务业务流程:
         // 1. 传入提交题目 id，获取对应的提交题目和提交信息 (代码，语言等)
 
-        ProblemSubmit problemSubmit = problemSubmitService.getById(problemSubmitId);
+        ProblemSubmit problemSubmit = problemServiceFeignClient.getProblemSubmitById(problemSubmitId);
         if (problemSubmit == null)
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "提交的题目信息不存在");
 
         // 根据提交题目获取题目 id，进而获取题目
         Long problemId = problemSubmit.getProblemId();
-        Problem problem = problemService.getById(problemId);
+        Problem problem = problemServiceFeignClient.getProblemById(problemId);
         if (problem == null)
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "题目信息不存在");
 
@@ -71,7 +64,7 @@ public class JudgeServiceImpl implements JudgeService {
         submitUpdate.setId(problemSubmitId);
         submitUpdate.setTestStatus(ProblemSubmitStatusEnum.JUDGING.getValue());
         // 相当于上锁
-        boolean isUpdate = problemSubmitService.updateById(submitUpdate);
+        boolean isUpdate = problemServiceFeignClient.updateProblemSubmitById(submitUpdate);
         if (!isUpdate)
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新题目提交状态失败");
 
@@ -117,12 +110,12 @@ public class JudgeServiceImpl implements JudgeService {
         submitUpdate.setTestStatus(ProblemSubmitStatusEnum.SUCCEED.getValue());
         submitUpdate.setTestInfo(JSONUtil.toJsonStr(testInfoResp));
         // 相当于上锁
-        isUpdate = problemSubmitService.updateById(submitUpdate);
+        isUpdate = problemServiceFeignClient.updateProblemSubmitById(submitUpdate);
         if (!isUpdate)
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新题目提交状态失败");
 
         //再从数据库中获取最新的题目提交状态
-        ProblemSubmit problemSubmitRes = problemSubmitService.getById(problemId);
+        ProblemSubmit problemSubmitRes = problemServiceFeignClient.getProblemSubmitById(problemId);
 
         return problemSubmitRes;
     }
