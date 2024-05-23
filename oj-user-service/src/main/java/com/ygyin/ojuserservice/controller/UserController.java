@@ -36,7 +36,7 @@ import static com.ygyin.ojuserservice.service.impl.UserServiceImpl.SALT;
  *
  */
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/")
 @Slf4j
 public class UserController {
 
