@@ -2,6 +2,9 @@ package com.ygyin.ojservicecli.service;
 
 
 import com.ygyin.ojmodel.model.entity.ProblemSubmit;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * 判题服务业务流程:
@@ -9,13 +12,16 @@ import com.ygyin.ojmodel.model.entity.ProblemSubmit;
  * 2. 调用代码沙箱，获取代码的运行结果
  * 3. 根据代码沙箱返回的执行结果，再设置该题目的判题状态和信息
  */
-public interface JudgeService {
+
+@FeignClient(name = "oj-judge-service", path = "/api/judge/inner")
+public interface JudgeServiceFeignClient {
 
     /**
      * 进行判题
      * @param problemSubmitId
      * @return
      */
-    ProblemSubmit doJudgeProblem(long problemSubmitId);
+    @PostMapping("/do_judge")
+    ProblemSubmit doJudgeProblem(@RequestParam("problemSubmitId") long problemSubmitId);
 
 }
