@@ -12,7 +12,8 @@ import javax.annotation.Resource;
 /**
  * 仅供内部服务间调用的 problem controller
  */
-@RestController("/inner")
+@RestController
+@RequestMapping("/inner")
 public class InnerProblemController implements ProblemServiceFeignClient {
 
     @Resource

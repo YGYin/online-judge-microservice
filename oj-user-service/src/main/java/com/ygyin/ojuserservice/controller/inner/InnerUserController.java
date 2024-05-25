@@ -4,6 +4,7 @@ import com.ygyin.ojmodel.model.entity.User;
 import com.ygyin.ojservicecli.service.UserServiceFeignClient;
 import com.ygyin.ojuserservice.service.UserService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -15,7 +16,8 @@ import java.util.List;
  * 仅供内部服务之间调用用户服务的 user controller
  * 全局路径加上了 /api/user
  */
-@RestController("/inner")
+@RestController
+@RequestMapping("/inner")
 public class InnerUserController implements UserServiceFeignClient {
 
     @Resource
