@@ -19,6 +19,7 @@ import com.ygyin.ojmodel.model.vo.ProblemSubmitVO;
 import com.ygyin.ojproblemservice.mapper.ProblemSubmitMapper;
 import com.ygyin.ojproblemservice.service.ProblemService;
 import com.ygyin.ojproblemservice.service.ProblemSubmitService;
+import com.ygyin.ojproblemservice.utils.MsgProducer;
 import com.ygyin.ojservicecli.service.JudgeServiceFeignClient;
 import com.ygyin.ojservicecli.service.UserServiceFeignClient;
 import org.apache.commons.lang3.ObjectUtils;
@@ -49,6 +50,9 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
     @Resource
     @Lazy
     private JudgeServiceFeignClient judgeServiceFeignClient;
+
+    @Resource
+    private MsgProducer msgProducer;
 
     /**
      * 提交题目
@@ -91,9 +95,13 @@ public class ProblemSubmitServiceImpl extends ServiceImpl<ProblemSubmitMapper, P
 
         // 获取提交题目 id，异步执行判题服务
         Long problemSubmitId = problemSubmit.getId();
-        CompletableFuture.runAsync(() -> {
-            judgeServiceFeignClient.doJudgeProblem(problemSubmitId);
-        });
+        // 将 problemSubmitId 发送到交换机中
+        msgProducer.sendMsg("my_exchanger","my_key",String.valueOf(problemSubmitId));
+
+//        CompletableFuture.runAsync(() -> {
+//            // 远程调用判题服务
+//            judgeServiceFeignClient.doJudgeProblem(problemSubmitId);
+//        });
 
         return problemSubmitId;
         // 锁必须要包裹住事务方法，要么限流，要么此处锁加事务防止用户重复提交

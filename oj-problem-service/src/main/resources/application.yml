@@ -13,6 +13,12 @@ spring:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
+  # RabbitMQ
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
   # session 配置
   session:
     store-type: redis

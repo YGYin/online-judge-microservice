@@ -19,7 +19,7 @@ public class RemoteSandboxImpl implements Sandbox {
     @Override
     public RunCodeResponse runCode(RunCodeRequest runCodeRequest) {
         System.out.println("实际远程沙箱");
-        String url = "http://localhost:8080/runCode";
+        String url = "http://localhost:8090/runCode";
         String reqJsonStr = JSONUtil.toJsonStr(runCodeRequest);
         String respStr = HttpUtil.createPost(url).
                 header(AUTH_REQ_HEADER,AUTH_REQ_SECRET_KEY)

@@ -1,5 +1,6 @@
 package com.ygyin.ojjudgeservice;
 
+import com.ygyin.ojjudgeservice.utils.InitMq;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -17,6 +18,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class OjJudgeServiceApplication {
     // 纯粹调用代码沙箱，没有mapper
     public static void main(String[] args) {
+        InitMq.doMqInit();
         SpringApplication.run(OjJudgeServiceApplication.class, args);
     }
 
